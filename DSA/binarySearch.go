@@ -1,6 +1,36 @@
 package DSA
 
+// PRACTICE
+
+// 704. Binary Search
+func Search(nums []int, target int) int {
+	left, right := 0, len(nums)-1
+	for left <= right {
+		mid := left + (right-left)/2
+		if nums[mid] == target {
+			return mid
+		} else if nums[mid] < target {
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+	return -1
+}
+
 // 367. Valid Perfect Square
+// Ý tưởng: Sử dụng binary search để tìm căn bậc hai của num
+// Cách thực hiện:
+// 1. Nếu num < 0, trả về false
+// 2. Khởi tạo left = 0, right = num
+// 3. Lặp cho đến khi left <= right
+// 4. Tính mid = (left + right) / 2
+// 5. Tính square = mid * mid
+// 6. Nếu square == num, trả về true
+// 7. Nếu square < num, tăng left lên 1
+// 8. Nếu square > num, giảm right xuống 1
+// 9. Trả về false
+// Độ phức tạp: O(log n) time, O(1) space
 func IsPerfectSquare(num int) bool {
 	if num < 0 {
 		return false
@@ -44,6 +74,15 @@ func ArrangeCoins(n int) int {
 }
 
 // 852. Peak Index in a Mountain Array
+// Ý tưởng: Sử dụng binary search để tìm đỉnh của mảng
+// Cách thực hiện:
+// 1. Khởi tạo left = 0, right = len(arr)-1
+// 2. Lặp cho đến khi left < right
+// 3. Tính mid = (left + right) / 2
+// 4. Nếu arr[mid] > arr[mid+1], giảm right xuống 1
+// 5. Nếu arr[mid] < arr[mid+1], tăng left lên 1
+// 6. Trả về left
+// Độ phức tạp: O(log n) time, O(1) space
 func PeakIndexInMountainArray(arr []int) int {
 	left, right := 0, len(arr)-1
 	for left < right {

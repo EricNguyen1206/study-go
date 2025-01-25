@@ -3,6 +3,7 @@ package DSA
 type ListNode struct {
 	Val  int
 	Next *ListNode
+	Prev *ListNode
 }
 
 // 707. Design Linked List
@@ -28,7 +29,10 @@ func (list *MyLinkedList) Get(index int) int {
 }
 
 func (list *MyLinkedList) AddAtHead(val int) {
-	newNode := &ListNode{Val: val, Next: list.head}
+	newNode := &ListNode{Val: val, Next: list.head, Prev: nil}
+	if list.head != nil {
+		list.head.Prev = newNode
+	}
 	list.head = newNode
 	if list.tail == nil {
 		list.tail = newNode
@@ -37,14 +41,13 @@ func (list *MyLinkedList) AddAtHead(val int) {
 }
 
 func (list *MyLinkedList) AddAtTail(val int) {
-	newNode := &ListNode{Val: val, Next: nil}
-	if list.tail == nil {
-		list.head = newNode
-		list.tail = newNode
-	} else {
+	newNode := &ListNode{Val: val, Next: nil, Prev: list.tail}
+	if list.tail != nil {
 		list.tail.Next = newNode
-		list.tail = newNode
+	} else {
+		list.head = newNode
 	}
+	list.tail = newNode
 	list.size++
 }
 
@@ -61,7 +64,10 @@ func (list *MyLinkedList) AddAtIndex(index int, val int) {
 		for i := 0; i < index-1; i++ {
 			prev = prev.Next
 		}
-		newNode := &ListNode{Val: val, Next: prev.Next}
+		newNode := &ListNode{Val: val, Next: prev.Next, Prev: prev}
+		if prev.Next != nil {
+			prev.Next.Prev = newNode
+		}
 		prev.Next = newNode
 		list.size++
 	}
@@ -73,12 +79,26 @@ func (list *MyLinkedList) DeleteAtIndex(index int) {
 	}
 	if index == 0 {
 		list.head = list.head.Next
+		if list.head != nil {
+			list.head.Prev = nil
+		} else {
+			list.tail = nil
+		}
 	} else {
 		prev := list.head
 		for i := 0; i < index-1; i++ {
 			prev = prev.Next
 		}
+		if prev.Next != nil {
+			prev.Next = prev.Next.Next
+			if prev.Next != nil {
+				prev.Next.Prev = prev
+			} else {
+				list.tail = prev
+			}
+		}
 	}
+	list.size--
 }
 
 // 876. Middle of the Linked List
@@ -122,7 +142,7 @@ func removeElements(head *ListNode, val int) *ListNode {
 }
 
 // 160. Intersection of Two Linked Lists
-func getIntersectionNode(headA, headB *ListNode) *ListNode {
+func GetIntersectionNode(headA, headB *ListNode) *ListNode {
 	curA, curB := headA, headB
 	for curA != curB {
 		if curA == nil {
@@ -154,4 +174,89 @@ func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
 		list2.Next = mergeTwoLists(list1, list2.Next)
 		return list2
 	}
+}
+
+// 234. Palindrome Linked List
+func isPalindrome(head *ListNode) bool {
+	if head == nil || head.Next == nil {
+		return true
+	}
+	slow, fast := head, head
+	var prev *ListNode
+	for fast != nil && fast.Next != nil {
+		fast = fast.Next.Next
+		slow, slow.Next, prev = slow.Next, prev, slow
+	}
+	if fast != nil {
+		slow = slow.Next
+	}
+	for slow != nil {
+		if slow.Val != prev.Val {
+			return false
+		}
+		slow, prev = slow.Next, prev.Next
+	}
+	return true
+}
+
+// 146. LRU Cache
+type LRUCache struct {
+	cache    map[int]*ListNode
+	head     *ListNode
+	tail     *ListNode
+	capacity int
+}
+
+func LRUConstructor(capacity int) LRUCache {
+	return LRUCache{cache: make(map[int]*ListNode), head: &ListNode{}, tail: &ListNode{}, capacity: capacity}
+}
+
+func (list *LRUCache) Get(key int) int {
+	if node, ok := list.cache[key]; ok {
+		list.moveToHead(node)
+		return node.Val
+	}
+	return -1
+}
+
+func (list *LRUCache) Put(key int, value int) {
+	if node, ok := list.cache[key]; ok {
+		node.Val = value
+		list.moveToHead(node)
+		return
+	}
+	node := &ListNode{Val: value}
+	list.cache[key] = node
+	list.moveToHead(node)
+	if list.capacity < len(list.cache) {
+		list.removeTail()
+	}
+}
+
+func (list *LRUCache) moveToHead(node *ListNode) {
+	if node == list.head.Next {
+		return
+	}
+	list.removeNode(node)
+	list.addNodeToHead(node)
+}
+
+func (list *LRUCache) removeNode(node *ListNode) {
+	prev := node.Prev
+	next := node.Next
+	prev.Next = next
+	next.Prev = prev
+}
+
+func (list *LRUCache) addNodeToHead(node *ListNode) {
+	node.Prev = list.head
+	node.Next = list.head.Next
+	list.head.Next.Prev = node
+	list.head.Next = node
+}
+
+func (list *LRUCache) removeTail() {
+	node := list.tail.Prev
+	list.removeNode(node)
+	delete(list.cache, node.Val)
 }
