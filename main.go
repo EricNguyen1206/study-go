@@ -2,12 +2,28 @@ package main
 
 import (
 	"fmt"
-	"study-go/hello/Day1"
+	"log"
+	"net/http"
+	"study-go/hello/Day3"
 )
 
 func main() {
-	fmt.Println(Day1.TriangleArea(10, 20))
-	fmt.Println(Day1.EvenString("hello"))
-	fmt.Println(Day1.CalculateArray([]int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}))
-	fmt.Println(Day1.TwoSum([]int{2, 7, 11, 15}, 9))
+	usersLoaded, err := Day3.LoadUsers()
+	if err != nil {
+		fmt.Println("Error loading users:", err)
+		return
+	}
+
+	server := &Day3.Server{
+		Users: usersLoaded,
+	}
+
+	http.HandleFunc("/register", server.RegisterHandler)
+	http.HandleFunc("/login", server.LoginHandler)
+
+	fmt.Println("Server is running on port 8080")
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
