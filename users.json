@@ -1,0 +1,17 @@
+{
+  "jane_smith": {
+    "username": "jane_smith",
+    "password": "securepassword",
+    "profile": "jane_smith_profile.png"
+  },
+  "john_doe": {
+    "username": "john_doe",
+    "password": "password123",
+    "profile": "john_doe_profile.png"
+  },
+  "john_doe2": {
+    "username": "john_doe2",
+    "password": "password123",
+    "profile": ""
+  }
+}
