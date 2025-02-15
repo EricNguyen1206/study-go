@@ -1,5 +1,9 @@
 package DSA
 
+import (
+	"reflect"
+)
+
 // 1. Two sum
 func TwoSum(nums []int, target int) []int {
 	hashMap := make(map[int]int)
@@ -156,4 +160,17 @@ func isValid(s string) bool {
 		}
 	}
 	return len(stack) == 0
+}
+
+// 1657. Determine if Two Strings Are Close
+func CloseStrings(word1 string, word2 string) bool {
+	hashMap1 := make(map[rune]int)
+	hashMap2 := make(map[rune]int)
+	for _, char := range word1 {
+		hashMap1[char]++
+	}
+	for _, char := range word2 {
+		hashMap2[char]++
+	}
+	return reflect.DeepEqual(hashMap1, hashMap2)
 }
