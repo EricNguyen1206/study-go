@@ -1,29 +1,30 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"study-go/hello/Day3"
+
+	"root/config"
+	"root/controllers"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	usersLoaded, err := Day3.LoadUsers()
+	// Initialize the database
+	db, err := config.InitDatabase()
 	if err != nil {
-		fmt.Println("Error loading users:", err)
-		return
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
+	defer db.Close()
 
-	server := &Day3.Server{
-		Users: usersLoaded,
-	}
+	// Set up router
+	router := mux.NewRouter()
+	controllers.RegisterUserRoutes(router)
 
-	http.HandleFunc("/register", server.RegisterHandler)
-	http.HandleFunc("/login", server.LoginHandler)
-
-	fmt.Println("Server is running on port 8080")
-
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	// Start the server
+	log.Println("Server running on port 8080")
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
