@@ -1,30 +1,49 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
 	"root/config"
 	"root/controllers"
+	"root/middleware"
+	"root/models"
 
-	"github.com/gorilla/mux"
+	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Initialize the database
-	db, err := config.InitDatabase()
+	config.InitDB()
+	config.InitRedis()
+
+	// auto migrate models (User, Session)
+	err := config.DB.AutoMigrate(&models.User{}, &models.Session{})
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatal("Migration failed:", err)
 	}
-	defer db.Close()
+	log.Println("Auto migration for all tables completed successfully.")
 
-	// Set up router
-	router := mux.NewRouter()
-	controllers.RegisterUserRoutes(router)
+	// Initialize router
+	r := gin.Default()
 
-	// Start the server
-	log.Println("Server running on port 8080")
-	if err := http.ListenAndServe(":8080", router); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	v1 := r.Group("/v1")
+	{
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/login", controllers.Login)
+			auth.POST("/signup", controllers.SignUp)
+		}
+
+		protect := v1.Group("/")
+		protect.Use(middleware.AuthMiddleware())
+		{
+			protect.GET("/ping", controllers.Ping)
+
+			user := protect.Group("/user")
+			{
+				user.PATCH("/:id", controllers.UpdateUserProfile)
+			}
+		}
 	}
+
+	r.Run(":8080")
 }

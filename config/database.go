@@ -1,36 +1,41 @@
 package config
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var (
+	DB    *gorm.DB
+	Redis *redis.Client
+	Ctx   = context.Background()
+)
 
-func InitDatabase() (*sql.DB, error) {
-	if db == nil {
-		var err error
-
-		// TODO: change to env variable
-		dsn := "root:password@tcp(127.0.0.1:3306)/test"
-		db, err = sql.Open("mysql", dsn)
-		if err != nil {
-			log.Fatalf("Failed to connect to database: %v", err)
-			return nil, err
-		}
-
-		// Test the connection
-		if err = db.Ping(); err != nil {
-			log.Fatalf("Database ping failed: %v", err)
-			return nil, err
-		}
-		log.Println("Database connection established")
+func InitDB() {
+	dsn := "root:1206trongtin@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local"
+	var err error
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
 	}
-	return db, nil
+	fmt.Println("Database connected!")
 }
 
-func ConnectDB() *sql.DB {
-	return db
+func InitRedis() {
+	Redis = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	_, err := Redis.Ping(Ctx).Result()
+	if err != nil {
+		log.Fatal("Failed to connect to Redis:", err)
+	}
+	fmt.Println("Redis connected!")
 }
