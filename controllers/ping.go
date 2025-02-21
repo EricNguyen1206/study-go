@@ -63,3 +63,52 @@ func Ping(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }
+
+// TopUsers trả về top 10 user gọi API /ping nhiều nhất
+func TopUsers(c *gin.Context) {
+	// Lấy tất cả key liên quan đến "ping-count:"
+	iter := config.Redis.Scan(config.Ctx, 0, "ping-count:*", 0).Iterator()
+	userCounts := make(map[string]int)
+
+	for iter.Next(config.Ctx) {
+		key := iter.Val()
+		username := key[len("ping-count:"):] // Lấy username từ key
+		count, err := config.Redis.Get(config.Ctx, key).Int()
+		if err == nil {
+			userCounts[username] = count
+		}
+	}
+
+	// Sắp xếp theo số lần gọi giảm dần
+	type UserCount struct {
+		Username string `json:"username"`
+		Count    int    `json:"count"`
+	}
+	var userList []UserCount
+	for username, count := range userCounts {
+		userList = append(userList, UserCount{username, count})
+	}
+
+	sort.Slice(userList, func(i, j int) bool {
+		return userList[i].Count > userList[j].Count
+	})
+
+	// Chỉ lấy top 10
+	if len(userList) > 10 {
+		userList = userList[:10]
+	}
+
+	// Trả về JSON
+	c.JSON(http.StatusOK, userList)
+}
+
+// CountUsers trả về số lượng xấp xỉ user gọi API /ping
+func CountUsers(c *gin.Context) {
+	count, err := config.Redis.PFCount(config.Ctx, "ping-users").Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get count"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"estimated_unique_users": count})
+}

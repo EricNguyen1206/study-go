@@ -37,6 +37,8 @@ func main() {
 		protect.Use(middleware.AuthMiddleware())
 		{
 			protect.GET("/ping", controllers.Ping)
+			protect.GET("/top", controllers.TopUsers)
+			protect.GET("/count", controllers.CountUsers)
 
 			user := protect.Group("/user")
 			{
